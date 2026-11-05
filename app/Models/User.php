@@ -7,7 +7,7 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 
 class User extends Authenticatable
 {
-    protected $fillable = ['name', 'username', 'password'];
+    protected $fillable = ['name', 'email', 'password'];
 
     protected $hidden = ['password', 'remember_token'];
 
@@ -18,6 +18,6 @@ class User extends Authenticatable
 
     public function agendas(): HasMany
     {
-        return $this->hasMany(Agenda::class);
+    return $this->hasMany(Agenda::class);
     }
 }

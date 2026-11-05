@@ -3,10 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Validation\ValidationException;
 
 class AuthController extends Controller
 {
@@ -15,27 +15,32 @@ class AuthController extends Controller
         return view('auth.login');
     }
 
-    public function login(Request $request)
+    public function login(Request $request): RedirectResponse
     {
         $request->validate([
             'email'    => ['required', 'string'],
-            'password' => ['required'],
+            'password' => ['required', 'string'],
         ]);
 
-        $login = $request->input('email');
-        $password = $request->input('password');
+        $login = trim($request->input('email'));
 
-        // Coba login pakai email atau username
+        // Kalau formatnya email, cari di kolom email; selain itu cari di kolom name (username)
         $field = filter_var($login, FILTER_VALIDATE_EMAIL) ? 'email' : 'name';
 
-        if (Auth::attempt([$field => $login, 'password' => $password], $request->boolean('remember'))) {
+        $credentials = [
+            $field     => $login,
+            'password' => $request->input('password'),
+        ];
+
+        if (Auth::attempt($credentials, $request->boolean('remember'))) {
             $request->session()->regenerate();
+
             return redirect()->intended(route('kalender'));
         }
 
-        throw ValidationException::withMessages([
-            'email' => 'Username / Email atau password salah.',
-        ]);
+        return back()
+            ->withErrors(['email' => 'Username / Email atau password salah.'])
+            ->onlyInput('email');
     }
 
     public function showRegister()
@@ -43,11 +48,11 @@ class AuthController extends Controller
         return view('auth.register');
     }
 
-    public function register(Request $request)
+    public function register(Request $request): RedirectResponse
     {
         $data = $request->validate([
-            'name'     => ['required', 'string', 'max:255'],
-            'email'    => ['required', 'string', 'max:255', 'unique:users,email'],
+            'name'     => ['required', 'string', 'max:255', 'unique:users,name'],
+            'email'    => ['required', 'email', 'max:255', 'unique:users,email'],
             'password' => ['required', 'confirmed', 'min:6'],
         ]);
 
@@ -58,13 +63,15 @@ class AuthController extends Controller
         ]);
 
         Auth::login($user);
+        $request->session()->regenerate();
 
         return redirect()->route('kalender');
     }
 
-    public function logout(Request $request)
+    public function logout(Request $request): RedirectResponse
     {
         Auth::logout();
+
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 

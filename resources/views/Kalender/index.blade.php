@@ -1,20 +1,24 @@
 @extends('layouts.app')
 @section('title', 'Kalender')
 @section('content')
-    <div class="rounded-2xl border-2 border-black bg-white p-5 shadow-[5px_5px_0_0_#000]">
-        <div class="mb-4 flex items-center justify-between">
-            <h1 class="text-xl font-extrabold">{{ $awal->translatedFormat('F Y') }}</h1>
-            <div class="flex gap-3 text-sm font-semibold text-[#ff6b3d]">
-                <a href="{{ route('kalender', ['bulan' => $sebelumnya->month, 'tahun' => $sebelumnya->year]) }}">&larr; Sebelumnya</a>
-                <a href="{{ route('kalender') }}">Hari ini</a>
-                <a href="{{ route('kalender', ['bulan' => $berikutnya->month, 'tahun' => $berikutnya->year]) }}">Berikutnya &rarr;</a>
+    <div class="rounded-2xl bg-white p-6 shadow-xl">
+        <div class="mb-5 flex flex-wrap items-center justify-between gap-3">
+            <h2 class="text-2xl font-bold">{{ $awal->translatedFormat('F Y') }}</h2>
+
+            <div class="flex items-center gap-3 text-sm font-semibold">
+                <a href="{{ route('kalender', ['bulan' => $sebelumnya->month, 'tahun' => $sebelumnya->year]) }}"
+                   class="rounded-lg px-3 py-1.5 text-orange-500 hover:bg-orange-50">&larr; Sebelumnya</a>
+                <a href="{{ route('kalender') }}"
+                   class="rounded-lg bg-orange-500 px-3 py-1.5 text-white hover:bg-orange-600">Hari ini</a>
+                <a href="{{ route('kalender', ['bulan' => $berikutnya->month, 'tahun' => $berikutnya->year]) }}"
+                   class="rounded-lg px-3 py-1.5 text-orange-500 hover:bg-orange-50">Berikutnya &rarr;</a>
             </div>
         </div>
 
         <div class="overflow-x-auto">
-            <div class="grid min-w-[640px] grid-cols-7 gap-2">
+            <div class="grid min-w-[680px] grid-cols-7 gap-2">
                 @foreach (['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu', 'Minggu'] as $h)
-                    <div class="text-center text-xs font-bold text-gray-500">{{ $h }}</div>
+                    <div class="pb-1 text-center text-xs font-semibold uppercase tracking-wide text-gray-400">{{ $h }}</div>
                 @endforeach
 
                 @for ($i = 0; $i < $offset; $i++)
@@ -24,15 +28,19 @@
                 @for ($d = 1; $d <= $jumlahHari; $d++)
                     @php
                         $hariIni = $awal->copy()->day($d)->isToday();
-                        $daftar = $agendaPerHari->get($d, collect());
+                        $daftar  = $agendaPerHari->get($d, collect());
                     @endphp
-                    <div class="min-h-24 rounded-lg border-2 p-1.5 text-xs
-                                {{ $hariIni ? 'border-[#ff6b3d] bg-orange-50' : 'border-gray-200 bg-gray-50' }}">
-                        <div class="mb-1 font-bold">{{ $d }}</div>
+
+                    <div class="min-h-24 rounded-xl border p-2 text-xs
+                                {{ $hariIni ? 'border-orange-400 bg-orange-50' : 'border-gray-100 bg-gray-50' }}">
+                        <div class="mb-1 flex items-center justify-between">
+                            <span class="font-bold {{ $hariIni ? 'text-orange-600' : 'text-gray-600' }}">{{ $d }}</span>
+                        </div>
+
                         @foreach ($daftar as $a)
                             <a href="{{ route('agenda.edit', $a) }}"
-                               class="mb-1 block truncate rounded px-1 py-0.5
-                                      {{ $a->selesai ? 'bg-green-100 text-green-800 line-through' : 'bg-blue-100 text-blue-800' }}">
+                               class="mb-1 block truncate rounded-md px-1.5 py-0.5 font-medium
+                                      {{ $a->selesai ? 'bg-green-100 text-green-700 line-through' : 'bg-orange-100 text-orange-700' }}">
                                 {{ $a->judul }}
                             </a>
                         @endforeach
@@ -40,5 +48,9 @@
                 @endfor
             </div>
         </div>
+
+        <p class="mt-4 text-xs text-gray-400">
+            Klik agenda untuk mengubah, atau pilih <span class="font-semibold text-orange-500">Tambah Agenda</span> di menu kiri.
+        </p>
     </div>
 @endsection

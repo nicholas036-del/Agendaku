@@ -1,25 +1,27 @@
 @extends('layouts.app')
 @section('title', 'Ubah Agenda')
 @section('content')
-    <div class="max-w-md rounded-2xl border-2 border-black bg-white p-6 shadow-[5px_5px_0_0_#000]">
-        <h1 class="mb-4 text-xl font-extrabold">Ubah Agenda</h1>
+    <div class="max-w-lg rounded-2xl bg-white p-8 shadow-xl">
+        <h2 class="mb-6 text-2xl font-bold">Ubah Agenda</h2>
 
-        <form method="POST" action="{{ route('agenda.update', $agenda) }}" class="space-y-4">
+        <form method="POST" action="{{ route('agenda.update', $agenda) }}" class="space-y-5">
             @csrf
             @method('PUT')
             @include('agenda._form')
 
             <button type="submit"
-                    class="w-full rounded-lg border-2 border-black bg-[#ff6b3d] p-2.5 font-bold text-white shadow-[3px_3px_0_0_#000]">
+                    class="w-full rounded-xl bg-orange-500 py-3.5 font-semibold text-white shadow-md shadow-orange-200 transition hover:bg-orange-600">
                 Simpan Perubahan
             </button>
         </form>
 
-        <form method="POST" action="{{ route('agenda.destroy', $agenda) }}" class="mt-3"
+        <form method="POST" action="{{ route('agenda.destroy', $agenda) }}" class="mt-4"
               onsubmit="return confirm('Hapus agenda ini?')">
             @csrf
             @method('DELETE')
-            <button type="submit" class="w-full text-sm font-semibold text-red-600 hover:underline">Hapus agenda</button>
+            <button type="submit" class="w-full text-sm font-semibold text-red-600 hover:underline">
+                Hapus agenda
+            </button>
         </form>
     </div>
 @endsection

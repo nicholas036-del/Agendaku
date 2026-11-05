@@ -19,6 +19,9 @@ Route::middleware('auth')->group(function () {
     Route::get('/', [KalenderController::class, 'index'])->name('kalender');
     Route::get('/tugas', [TugasController::class, 'belumSelesai'])->name('tugas.belum');
 
-    Route::resource('agenda', AgendaController::class)->except(['index', 'show']);
+    Route::resource('agenda', AgendaController::class)
+        ->parameters(['agenda' => 'agenda'])
+        ->except(['index', 'show']);
+
     Route::patch('/agenda/{agenda}/selesai', [AgendaController::class, 'toggle'])->name('agenda.toggle');
 });

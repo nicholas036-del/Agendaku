@@ -14,7 +14,7 @@
 <body class="min-h-screen flex items-center justify-center p-4">
 
     <div class="bg-white rounded-2xl shadow-xl w-full max-w-md p-8">
-        <!-- Logo -->
+        {{-- Logo --}}
         <div class="flex items-center justify-center gap-2 mb-6">
             <div class="w-10 h-10 bg-orange-500 rounded-xl flex items-center justify-center text-white font-bold text-xl">
                 A
@@ -28,6 +28,7 @@
         <h2 class="text-2xl font-bold text-center text-gray-800 mb-1">Selamat Datang! 👋</h2>
         <p class="text-center text-gray-500 text-sm mb-8">Masuk ke akun AgendaKu di sini untuk melanjutkan</p>
 
+        {{-- Semua pesan error tampil di sini --}}
         @if ($errors->any())
             <div class="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-xl mb-5 text-sm">
                 <ul class="list-disc list-inside">
@@ -42,20 +43,27 @@
             @csrf
 
             <div>
-                <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Username</label>
-                <input type="text" name="email" value="{{ old('email') }}"
+                <label for="email" class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Username</label>
+                <input id="email" type="text" name="email" value="{{ old('email') }}"
                        placeholder="Masukkan username"
+                       autocomplete="username"
                        class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-transparent transition"
                        required autofocus>
             </div>
 
             <div>
-                <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Password</label>
-                <input type="password" name="password"
+                <label for="password" class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Password</label>
+                <input id="password" type="password" name="password"
                        placeholder="Masukkan password"
+                       autocomplete="current-password"
                        class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-transparent transition"
                        required>
             </div>
+
+            <label class="flex items-center gap-2 text-sm text-gray-500">
+                <input type="checkbox" name="remember" class="rounded border-gray-300 text-orange-500 focus:ring-orange-400">
+                Ingat saya
+            </label>
 
             <button type="submit"
                     class="w-full bg-orange-500 hover:bg-orange-600 text-white font-semibold py-3.5 rounded-xl transition shadow-md shadow-orange-200">

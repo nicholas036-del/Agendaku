@@ -6,6 +6,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CouncilController;
 use App\Http\Controllers\StudentController;
 use App\Http\Controllers\TeacherController;
+use App\Http\Controllers\CalendarController;
 use Illuminate\Support\Facades\Route;
 
 // Redirect root to login
@@ -67,33 +68,6 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->as('admin.')->group(
 });
 
 // Calendar
-Route::get('/api/calendar/month', function () {
-    $year = (int) request('year', now()->year);
-    $month = (int) request('month', now()->month);
-    $date = now()->setDate($year, $month, 1)->startOfMonth();
-
-    $monthNames = [
-        1 => 'Januari',
-        2 => 'Februari',
-        3 => 'Maret',
-        4 => 'April',
-        5 => 'Mei',
-        6 => 'Juni',
-        7 => 'Juli',
-        8 => 'Agustus',
-        9 => 'September',
-        10 => 'Oktober',
-        11 => 'November',
-        12 => 'Desember',
-    ];
-
-    return response()->json([
-        'year' => $year,
-        'month' => $month,
-        'month_name' => $monthNames[$month] ?? $date->format('F'),
-        'first_day_of_week' => $date->dayOfWeek,
-        'days_in_month' => $date->daysInMonth,
-        'today_date' => now()->toDateString(),
-        'agendas' => (object) [],
-    ]);
-})->name('calendar.month');
+Route::get('/api/calendar/month', [CalendarController::class, 'month'])
+    ->middleware('auth')
+    ->name('calendar.month');

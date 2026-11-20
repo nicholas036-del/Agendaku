@@ -1,73 +1,117 @@
 <?php
 
-use App\Http\Controllers\TaskController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\CalendarController;
 use App\Http\Controllers\CouncilController;
 use App\Http\Controllers\StudentController;
+use App\Http\Controllers\TaskController;
 use App\Http\Controllers\TeacherController;
-use App\Http\Controllers\CalendarController;
 use Illuminate\Support\Facades\Route;
 
-// Redirect root to login
-Route::get('/', function () {
-    return redirect()->route('login');
+/*
+|--------------------------------------------------------------------------
+| Web Routes - Agendaku
+|--------------------------------------------------------------------------
+*/
+
+// Handler sementara untuk fitur yang belum dibuat
+$notImplemented = fn (string $message) => fn () => abort(501, $message);
+
+/*
+|--------------------------------------------------------------------------
+| Public
+|--------------------------------------------------------------------------
+*/
+Route::get('/', fn () => redirect()->route('login'));
+
+Route::controller(AuthController::class)->group(function () {
+    Route::get('/login', 'loginView')->name('login');
+    Route::post('/login', 'loginPost')->name('login-post');
+    Route::get('/register', 'registerView')->name('register-view');
+    Route::post('/register', 'registerPost')->name('register-post');
 });
 
-// Authentication Routes
-Route::get('/login', [AuthController::class, 'loginView'])->name('login');
-Route::post('/login', [AuthController::class, 'loginPost'])->name('login-post');
-Route::get('/register', [AuthController::class, 'registerView'])->name('register-view');
-Route::post('/register', [AuthController::class, 'registerPost'])->name('register-post');
-Route::post('/logout', [AuthController::class, 'logout'])->name('logout')->middleware('auth');
-
-// 1. Student Routes (Middleware: auth, role:student,admin)
-Route::middleware(['auth', 'role:student,admin'])->group(function () {
-    Route::get('/students', [StudentController::class, 'index'])->name('students.index');
-
-    // Task Management terhubung ke TaskController:
-    Route::prefix('tasks')->as('tasks.')->group(function () {
-        Route::post('/', [TaskController::class, 'store'])->name('store');
-        Route::put('/{task}', [TaskController::class, 'update'])->name('update');
-        Route::patch('/{task}/toggle', [TaskController::class, 'toggle'])->name('toggle');
-        Route::delete('/{task}', [TaskController::class, 'destroy'])->name('destroy');
-    });
-});
-
-// 2. Teacher Routes (Middleware: auth, role:teacher)
-Route::middleware(['auth', 'role:teacher,admin'])->prefix('teacher')->as('teachers.')->group(function () {
-    Route::get('/', [TeacherController::class, 'index'])->name('index');
-    Route::post('/tasks', fn() => abort(501, 'Penerbitan tugas guru belum diimplementasikan.'))->name('tasks.store');
-
-    // Rute pengumuman bisa berada di dalam group ini jika khusus untuk guru
-    Route::post('/announcements', fn() => abort(501, 'Pengumuman belum diimplementasikan.'))->name('announcements.store');
-});
-
-// 3. Council (OSIS) Routes (Middleware: auth, role:council)
-Route::middleware(['auth', 'role:council,admin'])->group(function () {
-    Route::get('/council', [CouncilController::class, 'index'])->name('council.index');
-
-    // Event Management
-    Route::prefix('school-events')->as('school-events.')->group(function () {
-        Route::post('/', fn() => abort(501, 'Acara sekolah belum diimplementasikan.'))->name('store');
-        Route::put('/{schoolEvent}', fn() => abort(501, 'Pembaruan acara belum diimplementasikan.'))->name('update');
-        Route::delete('/{schoolEvent}', fn() => abort(501, 'Penghapusan acara belum diimplementasikan.'))->name('destroy');
-    });
-});
-
-// 4. Admin Routes (Middleware: auth, role:admin)
-Route::middleware(['auth', 'role:admin'])->prefix('admin')->as('admin.')->group(function () {
-    Route::get('/', [AdminController::class, 'index'])->name('index');
-
-    // User Management
-    Route::prefix('users')->as('users.')->group(function () {
-        Route::post('/', fn() => abort(501, 'Manajemen pengguna belum diimplementasikan.'))->name('store');
-        Route::put('/{user}', fn() => abort(501, 'Pembaruan pengguna belum diimplementasikan.'))->name('update');
-        Route::delete('/{user}', fn() => abort(501, 'Penghapusan pengguna belum diimplementasikan.'))->name('destroy');
-    });
-});
-
-// Calendar
+/*
+|--------------------------------------------------------------------------
+| API Kalender (tugas + acara, dikelompokkan per tanggal)
+| GET /api/calendar/month?month=YYYY-MM
+|--------------------------------------------------------------------------
+| TEMPORARY: middleware auth dimatikan hanya untuk tes JSON.
+| Sebelum commit, ganti jadi ->middleware('auth').
+*/
 Route::get('/api/calendar/month', [CalendarController::class, 'month'])
-    ->middleware('auth')
+    // ->middleware('auth')
     ->name('calendar.month');
+
+/*
+|--------------------------------------------------------------------------
+| Semua user yang sudah login
+|--------------------------------------------------------------------------
+*/
+Route::middleware('auth')->group(function () use ($notImplemented) {
+    Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
+
+    /*
+    |----------------------------------------------------------------------
+    | Student (role: student, admin)
+    |----------------------------------------------------------------------
+    */
+    Route::middleware('role:student,admin')->group(function () {
+        Route::get('/students', [StudentController::class, 'index'])->name('students.index');
+
+        Route::controller(TaskController::class)
+            ->prefix('tasks')->as('tasks.')
+            ->group(function () {
+                Route::post('/', 'store')->name('store');
+                Route::put('/{task}', 'update')->name('update');
+                Route::patch('/{task}/toggle', 'toggle')->name('toggle');
+                Route::delete('/{task}', 'destroy')->name('destroy');
+            });
+    });
+
+    /*
+    |----------------------------------------------------------------------
+    | Teacher (role: teacher, admin)
+    |----------------------------------------------------------------------
+    */
+    Route::middleware('role:teacher,admin')
+        ->prefix('teacher')->as('teachers.')
+        ->group(function () use ($notImplemented) {
+            Route::get('/', [TeacherController::class, 'index'])->name('index');
+            Route::post('/tasks', $notImplemented('Penerbitan tugas guru belum diimplementasikan.'))->name('tasks.store');
+            Route::post('/announcements', $notImplemented('Pengumuman belum diimplementasikan.'))->name('announcements.store');
+        });
+
+    /*
+    |----------------------------------------------------------------------
+    | Council / OSIS (role: council, admin)
+    |----------------------------------------------------------------------
+    */
+    Route::middleware('role:council,admin')->group(function () use ($notImplemented) {
+        Route::get('/council', [CouncilController::class, 'index'])->name('council.index');
+
+        Route::prefix('school-events')->as('school-events.')->group(function () use ($notImplemented) {
+            Route::post('/', $notImplemented('Acara sekolah belum diimplementasikan.'))->name('store');
+            Route::put('/{schoolEvent}', $notImplemented('Pembaruan acara belum diimplementasikan.'))->name('update');
+            Route::delete('/{schoolEvent}', $notImplemented('Penghapusan acara belum diimplementasikan.'))->name('destroy');
+        });
+    });
+
+    /*
+    |----------------------------------------------------------------------
+    | Admin (role: admin)
+    |----------------------------------------------------------------------
+    */
+    Route::middleware('role:admin')
+        ->prefix('admin')->as('admin.')
+        ->group(function () use ($notImplemented) {
+            Route::get('/', [AdminController::class, 'index'])->name('index');
+
+            Route::prefix('users')->as('users.')->group(function () use ($notImplemented) {
+                Route::post('/', $notImplemented('Manajemen pengguna belum diimplementasikan.'))->name('store');
+                Route::put('/{user}', $notImplemented('Pembaruan pengguna belum diimplementasikan.'))->name('update');
+                Route::delete('/{user}', $notImplemented('Penghapusan pengguna belum diimplementasikan.'))->name('destroy');
+            });
+        });
+});

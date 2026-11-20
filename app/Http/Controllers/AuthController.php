@@ -30,22 +30,28 @@ class AuthController extends Controller
     }
 
     public function loginPost(Request $request)
-    {
-        $credentials = $request->validate([
-            'username' => ['required', 'string'],
-            'password' => ['required', 'string'],
-        ]);
+{
+    $credentials = $request->validate([
+        'username' => ['required', 'string'],
+        'password' => ['required', 'string'],
+    ]);
 
-        if (Auth::attempt($credentials)) {
-            $request->session()->regenerate();
+    // Format email -> cocokkan ke kolom email, selain itu ke kolom username
+    $field = filter_var($credentials['username'], FILTER_VALIDATE_EMAIL) ? 'email' : 'username';
 
-            return $this->redirectBasedOnRole(Auth::user()->role);
-        }
+    if (Auth::attempt([
+        $field     => $credentials['username'],
+        'password' => $credentials['password'],
+    ])) {
+        $request->session()->regenerate();
 
-        return back()
-            ->withErrors(['username' => 'Username atau password salah!'])
-            ->withInput($request->only('username'));
+        return $this->redirectBasedOnRole(Auth::user()->role);
     }
+
+    return back()
+        ->withErrors(['username' => 'Username/email atau password salah!'])
+        ->withInput($request->only('username'));
+}
 
     public function registerView(): View
     {
